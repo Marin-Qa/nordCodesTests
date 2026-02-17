@@ -3,6 +3,7 @@ package com.example.tests;
 import com.example.TestApplication;
 import com.example.config.RestAssuredSpec;
 import com.example.config.WireMockConfig;
+import com.example.testutils.AllureUtils;
 import com.example.testutils.TestUtils;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
@@ -14,6 +15,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BaseTest extends RestAssuredSpec {
+
+    @Autowired
+    public AllureUtils allureUtils;
+
+    @Autowired
+    public TestUtils testUtils;
 
     public String TOKEN;
 

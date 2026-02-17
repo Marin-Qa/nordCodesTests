@@ -4,18 +4,12 @@ import com.example.endpoints.service.EndpointsService;
 import com.example.param.ParamName;
 import com.example.param.action.ActionName;
 import com.example.tests.BaseTest;
-import com.example.testutils.AllureUtils;
 import io.qameta.allure.*;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static org.hamcrest.Matchers.equalTo;
 
 @Epic("API")
@@ -24,8 +18,7 @@ import static org.hamcrest.Matchers.equalTo;
 @Story("API")
 public class LogoutTest extends BaseTest {
 
-    @Autowired
-    AllureUtils allureUtils;
+
 
     @BeforeEach
     void setIp(TestInfo info){
@@ -79,6 +72,30 @@ public class LogoutTest extends BaseTest {
             response.then()
                     .statusCode(HttpStatus.SC_OK)
                     .body("result", equalTo("OK"));
+        });
+    }
+
+    @RepeatedTest(5)
+    @DisplayName("Проверка logout не успех")
+    @Description("Проверяем неуспешный ответ на logout")
+    @Owner("Marin")
+    @Severity(SeverityLevel.CRITICAL)
+    void testActionFail(){
+        String token = testUtils.genToken();
+
+        Allure.step("Шаг 3. Делаем запрос logout для успешного ответа", () -> {
+            Response response = RestAssured.given()
+                    .spec(specForEndpoint)
+                    .header(ParamName.ACTION, ActionName.ACTION)
+                    .header(ParamName.TOKEN, token)
+                    .post(EndpointsService.ENDPOINT);
+
+            allureUtils.forAllure(response, token);
+
+            response.then()
+                    .statusCode(HttpStatus.SC_FORBIDDEN)
+                    .body("result", equalTo("ERROR"))
+                    .body("message", equalTo(String.format("Token '%s' not found", token)));
         });
     }
 }

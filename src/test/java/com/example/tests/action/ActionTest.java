@@ -5,6 +5,7 @@ import com.example.param.ParamName;
 import com.example.param.action.ActionName;
 import com.example.tests.BaseTest;
 import com.example.testutils.AllureUtils;
+import com.example.testutils.TestUtils;
 import io.qameta.allure.*;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -24,10 +25,14 @@ import static org.hamcrest.Matchers.equalTo;
 @DisplayName("Action")
 @Feature("Action")
 @Story("API")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ActionTest extends BaseTest {
 
     @Autowired
     AllureUtils allureUtils;
+
+    @Autowired
+    TestUtils testUtils;
 
     @BeforeEach
     void setUp(TestInfo info) {
@@ -72,14 +77,13 @@ public class ActionTest extends BaseTest {
         verify(postRequestedFor(urlEqualTo("/doAction"))
                 .withRequestBody(containing(TOKEN)));
     }
-
-    @ParameterizedTest
+    @RepeatedTest(5)
     @Tag("skipSetup")
     @DisplayName("Проверка action без токена")
     @Description("Проверяем ответ от action, если токен не найден")
     @Owner("Marin")
-    @MethodSource("provideTestActionFailed")
-    void testActionFailed(String token){
+    void testActionFailed(){
+        String token = testUtils.genToken();
         Allure.step("Шаг 1. Делаем запрос action для Forbidden", () -> {
             Response response = RestAssured.given()
                     .spec(specForEndpoint)
@@ -90,19 +94,10 @@ public class ActionTest extends BaseTest {
             allureUtils.forAllure(response, token);
 
             response.then()
-                    .log().body()
                     .statusCode(HttpStatus.SC_FORBIDDEN)
 
                     .body("result", equalTo("ERROR"))
                     .body("message", equalTo(String.format("Token '%s' not found", token)));
         });
-    }
-
-    private static Stream<Arguments> provideTestActionFailed() {
-        return Stream.of(
-                Arguments.of("A08A37101F814F468B2F6A89CDA48CBB"),
-                Arguments.of("F0FD70CD81254C8B9D69A36B3DEA712C"),
-                Arguments.of("E561F3FD0237446FB7B300E08E94D400")
-        );
     }
 }
